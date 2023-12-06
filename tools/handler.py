@@ -81,12 +81,12 @@ class LstProtocol(serial.threaded.Protocol):
         except UnicodeDecodeError:
             msg = ""
 
-        print(f"Packet type {hex(packet['command'])}")
         if packet['command'] == OpenLstCmds.ASCII and "OpenLST" in msg:
             print(f"Boot message ({hex(packet['hwid'])}): {msg}") # TODO: figure out how to use logging without breaking ipython
 
     def handle_out_of_packet_data(self, data):
-        print(f"Unexpected bytes: {data}")
+        # print(f"Unexpected bytes: {data}")
+        pass
 
 
 if __name__ == "__main__":

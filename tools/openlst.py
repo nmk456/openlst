@@ -19,6 +19,13 @@ from handler import LstProtocol
 MAX_DATA_LEN = 251 - 6
 J2000 = datetime(2000, 1, 1, 11, 58, 55, 816000)
 
+SHELL_HEADER = """\
+OpenLST shell
+
+Commands can be accessed through the `openlst` object
+
+Ex: `openlst.reboot()`"""
+
 
 def unpack_cint(data: bytes, size: int, signed: bool) -> int:
     if size == 1:
@@ -53,7 +60,6 @@ class OpenLst:
         self,
         port: str,
         hwid: int,
-        id: str = None,
         baud: int = 115200,
         rtscts: bool = False,
         timeout: float = 1,
@@ -67,7 +73,6 @@ class OpenLst:
         Args:
             port (str): Serial port location. Looks like /dev/tty123 on Linux and COM123 on windows.
             hwid (int): HWID of connected OpenLST.
-            id (str, optional): Serial port ID.
             baud (int, optional): Serial baud rate. Defaults to 115200.
             rtscts (bool, optional): Enable flow control with RTS/CTS. Defaults to False.
             timeout (int, optional): Command timeout in seconds. Defaults to 1.
@@ -76,11 +81,8 @@ class OpenLst:
         if port:
             self.ser = serial.Serial(port, baud, rtscts=rtscts)
         else:
-            ports = serial.tools.list_ports.comports()
-
-            for ser_port in ports:
-                if ser_port.serial_number == id:
-                    self.ser = serial.Serial(ser_port.device, baud, rtscts=rtscts)
+            # Loop back for testing if no port is specified
+            self.ser = serial.serial_for_url("loop://", baudrate=115200)
 
         self.timeout = timeout
         self.hwid = hwid
@@ -371,6 +373,7 @@ class OpenLst:
 if __name__ == "__main__":
     import click
     import IPython
+    from traitlets.config import get_config
 
     @click.command()
     @click.option("--port", default=None, help="Serial port")
@@ -388,6 +391,8 @@ if __name__ == "__main__":
         openlst = OpenLst(port, hwid, id, rtscts=rtscts)
 
         with openlst:
-            IPython.embed()
+            c = get_config()
+            c.InteractiveShellEmbed.colors = "Linux"
+            IPython.embed(header=SHELL_HEADER, config=c)
 
     main()
