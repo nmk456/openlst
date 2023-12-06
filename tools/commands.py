@@ -1,5 +1,3 @@
-import enum
-
 class OpenLstCmds:
     BOOTLOADER_PING = 0x00
     BOOTLOADER_ACK = 0x01

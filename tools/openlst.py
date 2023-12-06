@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import binascii
 import logging
 import numpy as np
@@ -9,11 +11,13 @@ import struct
 import time
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from commands import OpenLstCmds
 from handler import LstProtocol
 
 MAX_DATA_LEN = 251 - 6
+J2000 = datetime(2000, 1, 1, 11, 58, 55, 816000)
 
 
 def unpack_cint(data: bytes, size: int, signed: bool) -> int:
@@ -227,7 +231,9 @@ class OpenLst:
 
     def set_time(self, seconds: int = None, nanoseconds: int = None):
         if seconds == None or nanoseconds == None:
-            pass  # TODO: get computer time
+            t = datetime.utcnow() - J2000
+            seconds = int(t.total_seconds())
+            nanoseconds = t.microseconds
 
         msg = bytearray()
 

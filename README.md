@@ -39,6 +39,31 @@ source venv/bin/activate
 ./tools/bootload.py --port /dev/ttyUSB0 1234 openlst/build/radio.hex
 ```
 
+## Python Interface
+
+To launch the python interface, run (replacing ttyUSB0 with the correct serial port and 7001 with the HWID of the connected OpenLST):
+
+```bash
+./tools/openlst.py --port /dev/ttyUSB0 7001
+```
+
+This creates an IPython shell . Some of the available commands:
+
+```python
+openlst.reboot() # Reboots OpenLST
+openlst.transmit(b"Hello there", dest_hwid=0x1234) # Transmit message over RF
+openlst.get_time() # Get time since J2000
+openlst.set_time() # Sets time using computer time
+openlst.get_telem() # Gets telemetry
+openlst.set_rf_params(
+    frequency=437e6,
+    chan_bw=60268,
+    drate=7416,
+    deviation=3707,
+    power=0x12
+) # Set RF parameters (example values are defaults)
+```
+
 ## File Structure
 
 * `ground` - Python interface for controlling OpenLST over UART

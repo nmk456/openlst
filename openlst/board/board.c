@@ -69,16 +69,18 @@ void board_led0_set(__bit led_on) {
 #ifndef BOOTLOADER
 #ifdef CUSTOM_COMMANDS
 
-uint8_t rf_param_fsctrl0, rf_param_fsctrl1;
-uint8_t rf_param_freq0, rf_param_freq1, rf_param_freq2;
-uint8_t rf_param_chan_bw_e, rf_param_chan_bw_m;
-uint8_t rf_param_drate_e, rf_param_drate_m;
-uint8_t rf_param_deviatn_e, rf_param_deviatn_m;
-uint8_t rf_param_pa_config;
+uint8_t rf_param_fsctrl0 = RF_FSCTRL0, rf_param_fsctrl1 = RF_FSCTRL1;
+uint8_t rf_param_freq0 = RF_FREQ0, rf_param_freq1 = RF_FREQ1, rf_param_freq2 = RF_FREQ2;
+uint8_t rf_param_chan_bw_e = RF_CHAN_BW_E, rf_param_chan_bw_m = RF_CHAN_BW_M;
+uint8_t rf_param_drate_e = RF_DRATE_E, rf_param_drate_m = RF_DRATE_M;
+uint8_t rf_param_deviatn_e = RF_DEVIATN_E, rf_param_deviatn_m = RF_DEVIATN_M;
+uint8_t rf_param_pa_config = RF_PA_CONFIG;
 
 uint8_t custom_commands(const __xdata command_t *cmd, uint8_t len, __xdata command_t *reply) {
 	__xdata msg_data_t *cmd_data;
 	cmd_data = (__xdata msg_data_t *) cmd->data;
+
+	len; // Get rid of compiler warning
 
 	// Handle custom commands
 	switch (cmd->header.command) {
@@ -101,6 +103,8 @@ uint8_t custom_commands(const __xdata command_t *cmd, uint8_t len, __xdata comma
 			return sizeof(reply->header);
 			break;
 	}
+
+	return sizeof(reply->header);
 }
 
 uint8_t board_apply_radio_settings(uint8_t mode) {
