@@ -388,7 +388,7 @@ if __name__ == "__main__":
         hwid = binascii.unhexlify(hwid)
         hwid = struct.unpack(">H", hwid)[0]
 
-        openlst = OpenLst(port, hwid, id, rtscts=rtscts)
+        openlst = OpenLst(port, hwid, rtscts=rtscts)
 
         with openlst:
             c = get_config()
