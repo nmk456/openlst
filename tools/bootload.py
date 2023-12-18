@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from cryptography.hazmat.primitives.ciphers.aead import AESCCM
 from Crypto.Cipher import AES
 from binascii import unhexlify
 
