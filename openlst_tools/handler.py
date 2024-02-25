@@ -6,7 +6,7 @@ import serial.threaded
 import struct
 import time
 
-from commands import OpenLstCmds, MAX_DATA_LEN
+from openlst_tools.commands import OpenLstCmds, MAX_DATA_LEN
 
 
 class LstProtocol(serial.threaded.Protocol):

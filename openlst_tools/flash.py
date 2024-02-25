@@ -7,7 +7,7 @@ import subprocess
 
 from typing import List
 
-import intel_hex
+from openlst_tools import intel_hex
 
 
 class FlashConstants:

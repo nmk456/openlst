@@ -8,10 +8,10 @@ import logging
 import struct
 import time
 
-from flash import FlashConstants
-from openlst import OpenLst
+from openlst_tools.flash import FlashConstants
+from openlst_tools.openlst import OpenLst
 
-import intel_hex
+from openlst_tools import intel_hex
 
 
 def sign_image(image: bytes, key: bytes):

@@ -8,9 +8,9 @@ import struct
 from dataclasses import dataclass
 from datetime import datetime
 
-from commands import OpenLstCmds, MAX_DATA_LEN
-from handler import LstHandler
-from utils import unpack_cint, pack_cint
+from openlst_tools.commands import OpenLstCmds, MAX_DATA_LEN
+from openlst_tools.handler import LstHandler
+from openlst_tools.utils import unpack_cint, pack_cint
 
 
 J2000 = datetime(2000, 1, 1, 11, 58, 55, 816000)
