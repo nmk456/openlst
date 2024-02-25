@@ -1,3 +1,5 @@
+MAX_DATA_LEN = 251 - 6
+
 class OpenLstCmds:
     BOOTLOADER_PING = 0x00
     BOOTLOADER_ACK = 0x01

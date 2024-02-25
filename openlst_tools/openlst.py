@@ -3,20 +3,16 @@
 import binascii
 import logging
 import numpy as np
-import random
-import serial
-import serial.threaded
-import serial.tools.list_ports
 import struct
-import time
 
 from dataclasses import dataclass
 from datetime import datetime
 
-from commands import OpenLstCmds
-from handler import LstProtocol
+from commands import OpenLstCmds, MAX_DATA_LEN
+from handler import LstHandler
+from utils import unpack_cint, pack_cint
 
-MAX_DATA_LEN = 251 - 6
+
 J2000 = datetime(2000, 1, 1, 11, 58, 55, 816000)
 
 SHELL_HEADER = """\
@@ -27,35 +23,7 @@ Commands can be accessed through the `openlst` object
 Ex: `openlst.reboot()`"""
 
 
-def unpack_cint(data: bytes, size: int, signed: bool) -> int:
-    if size == 1:
-        fmt = "<b"
-    elif size == 2:
-        fmt = "<h"
-    elif size == 4:
-        fmt = "<i"
-
-    if not signed:
-        fmt = fmt.upper()
-
-    return struct.unpack(fmt, data)[0]
-
-
-def pack_cint(data: int, size: int, signed: bool) -> bytes:
-    if size == 1:
-        fmt = "<b"
-    elif size == 2:
-        fmt = "<h"
-    elif size == 4:
-        fmt = "<i"
-
-    if not signed:
-        fmt = fmt.upper()
-
-    return struct.pack(fmt, data)
-
-
-class OpenLst:
+class OpenLst(LstHandler):
     def __init__(
         self,
         port: str,
@@ -67,9 +35,6 @@ class OpenLst:
     ) -> None:
         """Object for communicating with OpenLST.
 
-        If `id` is given, all ports will be checked for one with that ID. This
-        is useful when more than one serial interface is used at the same time.
-
         Args:
             port (str): Serial port location. Looks like /dev/tty123 on Linux and COM123 on windows.
             hwid (int): HWID of connected OpenLST.
@@ -78,105 +43,9 @@ class OpenLst:
             timeout (int, optional): Command timeout in seconds. Defaults to 1.
         """
 
-        if port:
-            self.ser = serial.Serial(port, baud, rtscts=rtscts)
-        else:
-            # Loop back for testing if no port is specified
-            self.ser = serial.serial_for_url("loop://", baudrate=115200)
-
-        self.timeout = timeout
-        self.hwid = hwid
         self.f_ref = f_ref
 
-        # Create thread but don't start it yet
-        self.thread = serial.threaded.ReaderThread(self.ser, LstProtocol)
-
-        self.open = False
-        self.protocol: LstProtocol = None
-
-        # Initialize sequence number
-        self.seq = random.randint(0, 65536)
-
-        self.packets = []
-
-    def __enter__(self):
-        """Enter context"""
-        self.thread.start()
-
-        _, self.protocol = self.thread.connect()
-        self.open = True
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit context"""
-        self.open = False
-        self.thread.close()
-
-    def packets_available(self):
-        """Returns number of packets in queue."""
-
-        while self.protocol.packet_queue.qsize() > 0:
-            self.packets.append(self.protocol.packet_queue.get_nowait())
-
-        return len(self.packets)
-
-    def get_packet(self, cmd=None, seqnum=None):
-        if self.packets_available() == 0:
-            return None
-        elif seqnum:
-            for i, packet in enumerate(self.packets):
-                if packet["seq"] == seqnum:
-                    return self.packets.pop(i)
-
-            return None
-        elif cmd:
-            for i, packet in enumerate(self.packets):
-                if packet["command"] == cmd:
-                    return self.packets.pop(i)
-
-            return None
-        else:
-            return self.packets.pop(0)
-
-    def get_packet_timeout(self, cmd=None, seqnum=None, timeout=None):
-        start = time.time()
-
-        if timeout == None:
-            timeout = self.timeout
-
-        while time.time() - start < timeout:
-            resp = self.get_packet(cmd, seqnum)
-
-            if resp is not None:
-                return resp
-
-    def clean_packets(self, cmd=None):
-        if self.packets_available() == 0:
-            return
-
-        if cmd:
-            self.packets = [x for x in self.packets if x["command"] != cmd]
-        else:
-            del self.packets[:]
-
-    def _send(self, hwid: int, cmd: int, msg: bytes = bytes()):
-        packet = bytearray()
-
-        packet.extend(b"\x22\x69")
-        packet.append(6 + len(msg))
-        packet.extend(struct.pack(">H", hwid))
-        packet.extend(struct.pack(">H", self.seq))
-        packet.append(0x01)  # TODO: figure this out
-        packet.append(cmd)
-        packet.extend(msg)
-
-        self.thread.write(packet)
-
-        seq = self.seq
-
-        self.seq += 1
-        self.seq %= 2**16
-
-        return seq
+        super().__init__(port, hwid, baud, rtscts, timeout)
 
     def receive(self) -> bytes:
         return self.get_packet(OpenLstCmds.ASCII)
@@ -342,9 +211,7 @@ class OpenLst:
         # Deviation
         # f_dev = f_ref * 2^DEVIATN_E * (8 + DEVIATN_M) / 2^17
         DEVIATN_E = int(np.floor(np.log2(deviation * 2**14 / self.f_ref)))
-        DEVIATN_M = int(
-            np.round(deviation * 2**17 / (self.f_ref * 2**DEVIATN_E) - 8)
-        )
+        DEVIATN_M = int(np.round(deviation * 2**17 / (self.f_ref * 2**DEVIATN_E) - 8))
 
         assert DEVIATN_E >= 0 and DEVIATN_E < 7, DEVIATN_E
         assert DEVIATN_M >= 0 and DEVIATN_M < 7, DEVIATN_M

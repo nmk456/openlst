@@ -1,9 +1,12 @@
 import logging
+import queue
+import random
 import serial
 import serial.threaded
-import queue
+import struct
+import time
 
-from commands import OpenLstCmds
+from commands import OpenLstCmds, MAX_DATA_LEN
 
 
 class LstProtocol(serial.threaded.Protocol):
@@ -81,12 +84,124 @@ class LstProtocol(serial.threaded.Protocol):
         except UnicodeDecodeError:
             msg = ""
 
-        if packet['command'] == OpenLstCmds.ASCII and "OpenLST" in msg:
-            print(f"Boot message ({hex(packet['hwid'])}): {msg}") # TODO: figure out how to use logging without breaking ipython
+        if packet["command"] == OpenLstCmds.ASCII and "OpenLST" in msg:
+            print(
+                f"Boot message ({hex(packet['hwid'])}): {msg}"
+            )  # TODO: figure out how to use logging without breaking ipython
 
     def handle_out_of_packet_data(self, data):
         print(f"Unexpected bytes: {data}")
         # pass
+
+
+class LstHandler:
+    def __init__(
+        self,
+        port: str,
+        hwid: int,
+        baud: int = 115200,
+        rtscts: bool = False,
+        timeout: float = 1,
+    ) -> None:
+
+        if port:
+            self.ser = serial.Serial(port, baud, rtscts=rtscts)
+        else:
+            # Loop back for testing if no port is specified
+            self.ser = serial.serial_for_url("loop://", baudrate=115200)
+
+        self.timeout = timeout
+        self.hwid = hwid
+
+        # Create thread but don't start it yet
+        self.thread = serial.threaded.ReaderThread(self.ser, LstProtocol)
+
+        self.open = False
+        self.protocol: LstProtocol = None
+
+        # Initialize sequence number
+        self.seq = random.randint(0, 65536)
+
+        self.packets = []
+
+    def __enter__(self):
+        """Enter context"""
+        self.thread.start()
+
+        _, self.protocol = self.thread.connect()
+        self.open = True
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit context"""
+        self.open = False
+        self.thread.close()
+
+    def packets_available(self):
+        """Returns number of packets in queue."""
+
+        while self.protocol.packet_queue.qsize() > 0:
+            self.packets.append(self.protocol.packet_queue.get_nowait())
+
+        return len(self.packets)
+
+    def get_packet(self, cmd=None, seqnum=None):
+        if self.packets_available() == 0:
+            return None
+        elif seqnum:
+            for i, packet in enumerate(self.packets):
+                if packet["seq"] == seqnum:
+                    return self.packets.pop(i)
+
+            return None
+        elif cmd:
+            for i, packet in enumerate(self.packets):
+                if packet["command"] == cmd:
+                    return self.packets.pop(i)
+
+            return None
+        else:
+            return self.packets.pop(0)
+
+    def get_packet_timeout(self, cmd=None, seqnum=None, timeout=None):
+        start = time.time()
+
+        if timeout == None:
+            timeout = self.timeout
+
+        while time.time() - start < timeout:
+            resp = self.get_packet(cmd, seqnum)
+
+            if resp is not None:
+                return resp
+
+    def clean_packets(self, cmd=None):
+        if self.packets_available() == 0:
+            return
+
+        if cmd:
+            self.packets = [x for x in self.packets if x["command"] != cmd]
+        else:
+            del self.packets[:]
+
+    def _send(self, hwid: int, cmd: int, msg: bytes = bytes()):
+        packet = bytearray()
+
+        packet.extend(b"\x22\x69")
+        packet.append(6 + len(msg))
+        packet.extend(struct.pack(">H", hwid))
+        packet.extend(struct.pack(">H", self.seq))
+        packet.append(0x01)  # TODO: figure this out
+        packet.append(cmd)
+        packet.extend(msg)
+
+        self.thread.write(packet)
+
+        seq = self.seq
+
+        self.seq += 1
+        self.seq %= 2**16
+
+        return seq
 
 
 if __name__ == "__main__":
