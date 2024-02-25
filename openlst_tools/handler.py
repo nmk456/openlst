@@ -66,6 +66,7 @@ class LstProtocol(serial.threaded.Protocol):
             else:
                 self.handle_out_of_packet_data(byte)
 
+    # TODO: remove code specific to openLST and OBC
     def handle_packet(self, packet_raw: bytes):
         packet = {}
 
@@ -75,8 +76,6 @@ class LstProtocol(serial.threaded.Protocol):
         packet["system"] = packet_raw[5]
         packet["command"] = packet_raw[6]
         packet["data"] = packet_raw[7:]
-
-        self.packet_queue.put_nowait(packet)
 
         # Print boot messages
         try:
@@ -89,9 +88,14 @@ class LstProtocol(serial.threaded.Protocol):
                 f"Boot message ({hex(packet['hwid'])}): {msg}"
             )  # TODO: figure out how to use logging without breaking ipython
 
-    def handle_out_of_packet_data(self, data):
-        print(f"Unexpected bytes: {data}")
-        # pass
+        if packet["command"] == OpenLstCmds.ASCII and packet["data"][0] == 0x02:
+            print(f"Log: {msg[1:]}")
+            return # Return because we don't want log messages to go to the packet queue
+
+        self.packet_queue.put_nowait(packet)
+
+    def handle_out_of_packet_data(self, data: bytes):
+        print(f"Unexpected bytes: {data.hex()}")
 
 
 class LstHandler:
