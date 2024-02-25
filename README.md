@@ -35,8 +35,8 @@ Flash bootloader and application. Change HWID from 1234 to something else. Add s
 
 ```bash
 source venv/bin/activate
-./tools/flash.py openlst/build 1234
-./tools/bootload.py --port /dev/ttyUSB0 1234 openlst/build/radio.hex
+./openlst_tools/flash.py openlst/build 1234
+./openlst_tools/bootload.py --port /dev/ttyUSB0 1234 openlst/build/radio.hex
 ```
 
 ## Python Interface
@@ -44,7 +44,7 @@ source venv/bin/activate
 To launch the python interface, run (replacing ttyUSB0 with the correct serial port and 7001 with the HWID of the connected OpenLST):
 
 ```bash
-./tools/openlst.py --port /dev/ttyUSB0 7001
+./openlst_tools/openlst.py --port /dev/ttyUSB0 7001
 ```
 
 This creates an IPython shell . Some of the available commands:

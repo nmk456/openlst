@@ -85,8 +85,8 @@ class LstProtocol(serial.threaded.Protocol):
             print(f"Boot message ({hex(packet['hwid'])}): {msg}") # TODO: figure out how to use logging without breaking ipython
 
     def handle_out_of_packet_data(self, data):
-        # print(f"Unexpected bytes: {data}")
-        pass
+        print(f"Unexpected bytes: {data}")
+        # pass
 
 
 if __name__ == "__main__":
