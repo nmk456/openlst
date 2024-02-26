@@ -71,8 +71,8 @@ class LstProtocol(serial.threaded.Protocol):
         packet = {}
 
         packet["len"] = packet_raw[0]
-        packet["hwid"] = int.from_bytes(packet_raw[1:3], "big")
-        packet["seq"] = int.from_bytes(packet_raw[3:5], "big")
+        packet["hwid"] = int.from_bytes(packet_raw[1:3], "little")
+        packet["seq"] = int.from_bytes(packet_raw[3:5], "little")
         packet["system"] = packet_raw[5]
         packet["command"] = packet_raw[6]
         packet["data"] = packet_raw[7:]
@@ -89,7 +89,7 @@ class LstProtocol(serial.threaded.Protocol):
             )  # TODO: figure out how to use logging without breaking ipython
 
         if packet["command"] == OpenLstCmds.ASCII and packet["data"][0] == 0x02:
-            print(f"Log: {msg[1:]}")
+            print(f"Log {hex(packet['seq'])}: {msg[1:]}")
             return # Return because we don't want log messages to go to the packet queue
 
         self.packet_queue.put_nowait(packet)
