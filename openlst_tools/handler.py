@@ -192,8 +192,8 @@ class LstHandler:
 
         packet.extend(b"\x22\x69")
         packet.append(6 + len(msg))
-        packet.extend(struct.pack(">H", hwid))
-        packet.extend(struct.pack(">H", self.seq))
+        packet.extend(struct.pack("<H", hwid))
+        packet.extend(struct.pack("<H", self.seq))
         packet.append(0x01)  # TODO: figure this out
         packet.append(cmd)
         packet.extend(msg)
