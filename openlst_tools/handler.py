@@ -90,7 +90,7 @@ class LstProtocol(serial.threaded.Protocol):
 
         if packet["command"] == OpenLstCmds.ASCII and packet["data"][0] == 0x02:
             print(f"Log {hex(packet['seq'])}: {msg[1:]}")
-            return # Return because we don't want log messages to go to the packet queue
+            return  # Return because we don't want log messages to go to the packet queue
 
         self.packet_queue.put_nowait(packet)
 
@@ -177,6 +177,8 @@ class LstHandler:
 
             if resp is not None:
                 return resp
+
+        raise TimeoutError("No packet received")
 
     def clean_packets(self, cmd=None):
         if self.packets_available() == 0:
