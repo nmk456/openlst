@@ -5,8 +5,17 @@ import serial
 import serial.threaded
 import struct
 import time
+from typing import TypedDict
 
 from openlst_tools.commands import OpenLstCmds, MAX_DATA_LEN
+
+class Packet(TypedDict):
+    len: int
+    hwid: int
+    seq: int
+    system: int
+    command: int
+    data: bytes
 
 
 class LstProtocol(serial.threaded.Protocol):
@@ -68,7 +77,7 @@ class LstProtocol(serial.threaded.Protocol):
 
     # TODO: remove code specific to openLST and OBC
     def handle_packet(self, packet_raw: bytes):
-        packet = {}
+        packet = Packet()
 
         packet["len"] = packet_raw[0]
         packet["hwid"] = int.from_bytes(packet_raw[1:3], "little")
@@ -148,7 +157,7 @@ class LstHandler:
 
         return len(self.packets)
 
-    def get_packet(self, cmd=None, seqnum=None):
+    def get_packet(self, cmd=None, seqnum=None) -> Packet:
         if self.packets_available() == 0:
             return None
         elif seqnum:
@@ -166,7 +175,7 @@ class LstHandler:
         else:
             return self.packets.pop(0)
 
-    def get_packet_timeout(self, cmd=None, seqnum=None, timeout=None):
+    def get_packet_timeout(self, cmd=None, seqnum=None, timeout=None) -> Packet:
         start = time.time()
 
         if timeout == None:
