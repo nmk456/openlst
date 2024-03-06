@@ -38,7 +38,7 @@ void board_init(void) {
 	// Bypass pin setup
 	P1SEL &= ~(1<<1); // GPIO not peripheral
 	P1DIR |= 1<<1; // Output not input
-	P1_1 = 1;
+	P1_1 = 0;
 
 	// Power amplifier bias control on P2.0
 	// P2SEL &= ~(1<<0);  // GPIO not peripheral
@@ -56,6 +56,10 @@ void board_init(void) {
 	// P1_6 = PA_PD  (asserted low in RX) = !LST_RX_MODE
 	IOCFG1 = IOCFG1_GDO1_INV_ACTIVE_LOW | IOCFG_GDO_CFG_LNA_PD;
 	// No special function for P1_5 (IOCFG0)
+
+	// Set up flow control pins, this function runs before uart1_init
+	P0DIR |= 1<<3; // P0_3 output
+	P0SEL |= (1<<2) | (1<<3); // Set P0_3 and P0_4 to peripheral mode
 }
 
 void board_led_set(__bit led_on) {

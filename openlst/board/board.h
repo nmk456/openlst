@@ -46,6 +46,11 @@ void board_led0_set (__bit led_on);
 // Set output power to -30 dBm, from Table 72 page 207
 #define RF_PA_CONFIG 0xC0
 
+// === Enable UART Flow Control ===
+
+// flush UART, flow control, 8 bits, no parity, 1 stop bit, high stop bit, low start bit
+#define CONFIG_UART1_UCR ((1<<7) | (1<<6) | (1<<1))
+
 // === RF parameter control ===
 // To go back to original behavior, comment out everything inside the #ifndef BOOTLOADER
 #ifndef BOOTLOADER

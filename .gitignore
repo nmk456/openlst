@@ -7,3 +7,5 @@ key_file
 *.hex
 venv/
 __pycache__/
+build/
+*.egg-info/

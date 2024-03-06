@@ -72,13 +72,6 @@
 #define CONFIG_UART1_GCR 12
 #endif
 
-#ifndef CONFIG_UART1_USE_FLOW_CTRL
-#define CONFIG_UART1_USE_FLOW_CTRL 1
-#endif
-#ifndef CONFIG_UART1_FLOW_PIN
-#define CONFIG_UART1_FLOW_PIN P0_3
-#endif
-
 // Defaults: flush active transaction, no flow control,
 // 8 bits, no parity, 1 high stop bit, 1 low start bit
 #ifndef CONFIG_UART0_UCR
