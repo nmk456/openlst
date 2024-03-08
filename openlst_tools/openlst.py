@@ -142,8 +142,10 @@ class OpenLst(LstHandler):
         telem["packets_rejected_checksum"] = unpack_cint(data[50:54], 4, False)
         telem["packets_rejected_reserved"] = unpack_cint(data[54:58], 4, False)
         telem["packets_rejected_other"] = unpack_cint(data[58:62], 4, False)
-
-        # TODO: reserved, custom fields
+        telem["reserved0"] = unpack_cint(data[62:66], 4, False)
+        telem["reserved1"] = unpack_cint(data[66:70], 4, False)
+        telem["custom0"] = unpack_cint(data[70:74], 4, False)
+        telem["custom1"] = unpack_cint(data[74:78], 4, False)
 
         return telem
 

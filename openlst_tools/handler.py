@@ -129,7 +129,7 @@ class LstHandler:
         # Create thread but don't start it yet
         self.thread = serial.threaded.ReaderThread(self.ser, LstProtocol)
 
-        self.open = False
+        self.is_open = False
         self.protocol: LstProtocol = None
 
         # Initialize sequence number
@@ -137,17 +137,23 @@ class LstHandler:
 
         self.packets = []
 
-    def __enter__(self):
-        """Enter context"""
+    def open(self):
         self.thread.start()
 
         _, self.protocol = self.thread.connect()
-        self.open = True
+        self.is_open = True
+
+    def __enter__(self):
+        """Enter context"""
+        self.open()
+
+    def close(self):
+        self.is_open = False
+        self.thread.close()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Exit context"""
-        self.open = False
-        self.thread.close()
+        self.close()
 
     def packets_available(self):
         """Returns number of packets in queue."""
