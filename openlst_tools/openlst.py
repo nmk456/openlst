@@ -133,7 +133,7 @@ class OpenLst(LstHandler):
         telem["rx_mode"] = unpack_cint(data[13:14], 1, False)
         telem["tx_mode"] = unpack_cint(data[14:15], 1, False)
         telem["adc"] = [unpack_cint(data[i : i + 2], 2, True) for i in range(15, 35, 2)]
-        telem["last_rssi"] = unpack_cint(data[35:36], 1, True)
+        telem["last_rssi"] = unpack_cint(data[35:36], 1, False)
         telem["last_lqi"] = unpack_cint(data[36:37], 1, False)
         telem["last_freqest"] = unpack_cint(data[37:38], 1, True)
         telem["packets_sent"] = unpack_cint(data[38:42], 4, False)
@@ -146,6 +146,16 @@ class OpenLst(LstHandler):
         telem["reserved1"] = unpack_cint(data[66:70], 4, False)
         telem["custom0"] = unpack_cint(data[70:74], 4, False)
         telem["custom1"] = unpack_cint(data[74:78], 4, False)
+
+        rssi_dec = telem["last_rssi"]
+        rssi_offset = 74 # typical value for 433 MHz
+
+        if rssi_dec >= 128:
+            rssi_dbm = (rssi_dec - 256) / 2 - rssi_offset
+        else:
+            rssi_dbm = (rssi_dec) / 2 - rssi_offset
+
+        telem["rssi_dbm"] = rssi_dbm
 
         return telem
 
@@ -215,8 +225,8 @@ class OpenLst(LstHandler):
         DEVIATN_E = int(np.floor(np.log2(deviation * 2**14 / self.f_ref)))
         DEVIATN_M = int(np.round(deviation * 2**17 / (self.f_ref * 2**DEVIATN_E) - 8))
 
-        assert DEVIATN_E >= 0 and DEVIATN_E < 7, DEVIATN_E
-        assert DEVIATN_M >= 0 and DEVIATN_M < 7, DEVIATN_M
+        assert DEVIATN_E >= 0 and DEVIATN_E < 8, DEVIATN_E
+        assert DEVIATN_M >= 0 and DEVIATN_M < 8, DEVIATN_M
 
         dev_act = self.f_ref * 2**DEVIATN_E * (8 + DEVIATN_M) / 2**17
 
