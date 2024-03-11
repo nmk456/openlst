@@ -450,18 +450,20 @@ class SDR():
         self.usrp = UsrpWrapper()
         self.seq = random.randint(0, 65536)
 
-        self.Fsym = fsym
+        self.set_freq()
+        self.set_gain()
+        self.set_symbol_rate(fsym)
+
+    def set_symbol_rate(self, rate=7416):
+        self.Fsym = rate
         self.Fsamp = self.Fsym * 16
         # self.sps = int(self.Fsamp / self.Fsym)
         # Tsym = 1/self.Fsym
         h = 0.5
 
-        self.set_freq()
         self.usrp.set_tx_rate(self.Fsamp)
-        self.set_gain()
-
         self.mod = FSKModulator(self.Fsamp, self.Fsym, h=h)
-    
+
     def set_freq(self, freq=437e6):
         self.usrp.set_tx_freq(freq)
     
