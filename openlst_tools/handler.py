@@ -21,7 +21,7 @@ class Packet(TypedDict):
 class LstProtocol(serial.threaded.Protocol):
     START = b"\x22\x69"
 
-    def __init__(self):
+    def __init__(self, quiet):
         self.packet = bytearray()
         self.in_packet = False
         self.transport = None
@@ -30,6 +30,8 @@ class LstProtocol(serial.threaded.Protocol):
         self.packet_len = 0
 
         self.packet_queue = queue.Queue()
+
+        self.quiet = quiet
 
     def connection_mode(self, transport):
         self.transport = transport
@@ -93,18 +95,21 @@ class LstProtocol(serial.threaded.Protocol):
             msg = ""
 
         if packet["command"] == OpenLstCmds.ASCII and "OpenLST" in msg:
-            print(
-                f"Boot message ({hex(packet['hwid'])}): {msg}"
-            )  # TODO: figure out how to use logging without breaking ipython
+            if not self.quiet:
+                print(
+                    f"Boot message ({hex(packet['hwid'])}): {msg}"
+                )  # TODO: figure out how to use logging without breaking ipython
 
         if packet["command"] == OpenLstCmds.ASCII and packet["data"][0] == 0x02:
-            print(f"Log {hex(packet['seq'])}: {msg[1:]}")
+            if not self.quiet:
+                print(f"Log {hex(packet['seq'])}: {msg[1:]}")
             return  # Return because we don't want log messages to go to the packet queue
 
         self.packet_queue.put_nowait(packet)
 
     def handle_out_of_packet_data(self, data: bytes):
-        print(f"Unexpected bytes: {data.hex()}")
+        if not self.quiet:
+            print(f"Unexpected bytes: {data.hex()}")
 
 
 class LstHandler:
@@ -115,6 +120,7 @@ class LstHandler:
         baud: int = 115200,
         rtscts: bool = False,
         timeout: float = 1,
+        quiet: bool = False,
     ) -> None:
 
         if port:
@@ -125,9 +131,13 @@ class LstHandler:
 
         self.timeout = timeout
         self.hwid = hwid
+        self.quiet = quiet
+
+        def protocol_factory():
+            return LstProtocol(quiet)
 
         # Create thread but don't start it yet
-        self.thread = serial.threaded.ReaderThread(self.ser, LstProtocol)
+        self.thread = serial.threaded.ReaderThread(self.ser, protocol_factory)
 
         self.is_open = False
         self.protocol: LstProtocol = None

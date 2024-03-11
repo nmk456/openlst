@@ -31,6 +31,7 @@ class OpenLst(LstHandler):
         baud: int = 115200,
         rtscts: bool = False,
         timeout: float = 1,
+        quiet: bool = False,
         f_ref: float = 27e6,
     ) -> None:
         """Object for communicating with OpenLST.
@@ -45,7 +46,10 @@ class OpenLst(LstHandler):
 
         self.f_ref = f_ref
 
-        super().__init__(port, hwid, baud, rtscts, timeout)
+        super().__init__(port, hwid, baud, rtscts, timeout, quiet)
+
+    def __del__(self):
+        self.thread.close()
 
     def receive(self) -> bytes:
         return self.get_packet(OpenLstCmds.ASCII)
