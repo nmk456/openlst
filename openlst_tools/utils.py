@@ -7,6 +7,10 @@ def unpack_cint(data: bytes, size: int, signed: bool) -> int:
         fmt = "<h"
     elif size == 4:
         fmt = "<i"
+    elif size == 8:
+        fmt = "<q"
+    else:
+        raise ValueError("Invalid size")
 
     if not signed:
         fmt = fmt.upper()
@@ -21,6 +25,10 @@ def pack_cint(data: int, size: int, signed: bool) -> bytes:
         fmt = "<h"
     elif size == 4:
         fmt = "<i"
+    elif size == 8:
+        fmt = "<q"
+    else:
+        raise ValueError("Invalid size")
 
     if not signed:
         fmt = fmt.upper()
