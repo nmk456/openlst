@@ -31,8 +31,8 @@ class OpenLst(LstHandler):
         baud: int = 115200,
         rtscts: bool = False,
         timeout: float = 1,
-        quiet: bool = False,
         f_ref: float = 27e6,
+        quiet: bool = False,
     ) -> None:
         """Object for communicating with OpenLST.
 
@@ -152,14 +152,17 @@ class OpenLst(LstHandler):
         telem["custom1"] = unpack_cint(data[74:78], 4, False)
 
         rssi_dec = telem["last_rssi"]
-        rssi_offset = 74 # typical value for 433 MHz
 
-        if rssi_dec >= 128:
-            rssi_dbm = (rssi_dec - 256) / 2 - rssi_offset
-        else:
-            rssi_dbm = (rssi_dec) / 2 - rssi_offset
+        def decode_rssi(rssi_val):
+            rssi_offset = 74 # typical value for 433 MHz
 
-        telem["rssi_dbm"] = rssi_dbm
+            if rssi_val >= 128:
+                return (rssi_val - 256) / 2 - rssi_offset
+            else:
+                return (rssi_val) / 2 - rssi_offset
+
+        telem["rssi_dbm"] = decode_rssi(telem["last_rssi"])
+        telem["rssi_cont_dbm"] = decode_rssi(telem["custom0"]) # Continuous RSSI
 
         return telem
 

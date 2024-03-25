@@ -35,7 +35,7 @@ void board_init(void) {
 	P0SEL &= ~(1<<7);  // GPIO not peripheral
 	P0DIR |= 1<<7;  // Output not input
 
-	// Bypass pin setup
+	// Bypass pin setup, 1 to bypass external LNA/PA
 	P1SEL &= ~(1<<1); // GPIO not peripheral
 	P1DIR |= 1<<1; // Output not input
 	P1_1 = 0;
@@ -105,6 +105,11 @@ uint8_t custom_commands(const __xdata command_t *cmd, uint8_t len, __xdata comma
 			rf_param_pa_config = (cmd_data->rf_params.pa_config) & 0xFF;
 
 			return sizeof(reply->header);
+			break;
+		
+		// If we get an ASCII message, just drop it
+		case common_msg_ascii:
+			return 0;
 			break;
 	}
 
