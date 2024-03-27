@@ -454,10 +454,10 @@ class SDR():
         self.set_gain()
         self.set_symbol_rate(fsym)
 
-    def set_symbol_rate(self, rate=7416):
+    def set_symbol_rate(self, rate=7416, sps=16):
+        self.sps = sps
         self.Fsym = rate
-        self.Fsamp = self.Fsym * 16
-        # self.sps = int(self.Fsamp / self.Fsym)
+        self.Fsamp = self.Fsym * self.sps
         # Tsym = 1/self.Fsym
         h = 0.5
 
@@ -502,14 +502,12 @@ class SDR():
 
         samples = self.mod.get_samples()
 
-        # Add a 5ms gap at the end of the packet
-        samples = np.concatenate((samples, np.zeros(int(self.Fsamp/200), dtype=np.complex64)))
+        # Add a gap at the end of the packet
+        gap = 100*self.sps
+        samples = np.concatenate((samples, np.zeros(int(gap), dtype=np.complex64)))
 
         # Transmit
         self.usrp.tx(samples)
 
         self.seq += 1
         self.seq %= 2**16
-
-
-
