@@ -255,6 +255,9 @@ class OpenLst(LstHandler):
 
         return f_actual, chanbw_actual, drate_actual, dev_act
 
+    def set_bypass(self, bypass=True):
+        self._send(self.hwid, OpenLstCmds.BYPASS, bytes([1 if bypass else 0]))
+
 
 if __name__ == "__main__":
     import click

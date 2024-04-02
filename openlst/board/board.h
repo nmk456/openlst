@@ -73,7 +73,8 @@ typedef enum {
 #define RADIO_MODE_RANGING_TX ranging_rf_mode
 
 typedef enum {
-    custom_msg_rf_params = 0x80
+    custom_msg_rf_params = 0x80,
+    custom_msg_set_bypass = 0x81
 } custom_msg_no;
 
 typedef struct {

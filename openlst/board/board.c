@@ -106,7 +106,14 @@ uint8_t custom_commands(const __xdata command_t *cmd, uint8_t len, __xdata comma
 
 			return sizeof(reply->header);
 			break;
-		
+
+		case custom_msg_set_bypass:
+			P1_1 = cmd->data[0] & 0x01;
+
+			// Don't send a reply
+			return 0;
+			break;
+
 		// If we get an ASCII message, just drop it
 		case common_msg_ascii:
 			return 0;
