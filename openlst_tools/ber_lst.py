@@ -39,14 +39,21 @@ class BerTester:
         del self.lst_r
         del self.lst_t
 
-    def reboot(self, size, receive=True):
-        lst = self.lst_r if receive else self.lst_t
-        lst.reboot()
+    def reboot(self, size, receive=True, transmit=True):
+        if receive:
+            self.lst_r.reboot()
+        
+        if transmit:
+            self.lst_t.reboot()
 
         # Wait for 15 packets worth of time to make uptime valid
         # time.sleep(max(size*8*15/(self.drate/2), 1))
-        time.sleep(1)
+        time.sleep(1.5)
         # lst.set_rf_params(drate=self.drate, deviation=self.dev, chan_bw=self.bw)
+
+    def set_params(self, rate, gain):
+        _, self.bw, self.drate, self.dev = self.lst_r.set_rf_params(drate=rate)
+        self.lst_t.set_rf_params(drate=rate, power=gain)
 
     def packet_error_rate(self, count, gain, size=255, rate=7416):
         # Returns PER
@@ -54,13 +61,10 @@ class BerTester:
         PACKET_STEP = 10
         assert count % PACKET_STEP == 0, "Count must be a multiple of 10"
 
-        # _, self.bw, self.drate, self.dev = self.lst_r.set_rf_params(drate=rate, deviation=rate/2, chan_bw=2*rate/0.8)
-        # self.lst_t.set_rf_params(drate=rate, deviation=rate/2, chan_bw=2*rate/0.8, power=gain)
-
-        # print(f"Using datarate={int(self.drate)}, deviation={int(self.dev)}, bandwidth={int(self.bw)}")
-
         self.reboot(size)
-        self.reboot(size, False)
+        self.set_params(rate, gain)
+
+        print(f"Using datarate={int(self.drate)}, deviation={int(self.dev)}, bandwidth={int(self.bw)}")
 
         last_uptime = self.lst_r.get_telem()["uptime"]
         last_packets = 0
@@ -75,17 +79,17 @@ class BerTester:
                 # the message instead of forwarding it. This might help reduce
                 # errors.
                 self.lst_t.transmit(b'0'*(size-10))
-                # time.sleep(2*size*8/self.drate)
+                time.sleep(2*2*size*8/self.drate)
 
             # Wait for packet to finish transmitting
-            time.sleep(2)
+            time.sleep(1.5)
 
             try:
                 telem = self.lst_r.get_telem()
             except (AssertionError, TimeoutError):
                 telem = None
 
-            print(telem)
+            print(telem["packets_good"], telem["cs_count"], telem["rssi_dbm"])
 
             if telem is not None and telem["uptime"] >= last_uptime:
                 i += PACKET_STEP
@@ -97,6 +101,7 @@ class BerTester:
             else:
                 print("Uptime decreased, unexpected reboot")
                 self.reboot(size)
+                self.set_params(rate, gain)
 
                 last_uptime = 0
                 last_packets = 0
@@ -127,17 +132,17 @@ def vary_gain(port_r, port_t, hwid_r=0x00, hwid_t=0x01, num=4000, min=-30, max=1
         print(f"G={gains[i]}, PER={per}")
 
     final_data = np.array([gains, pers]).T
-    np.savetxt(f'gain_vs_received_n={num}_min={min}_max={max}_r={int(rate)}.csv', final_data, delimiter=',')
+    # np.savetxt(f'gain_vs_received_n={num}_min={min}_max={max}_r={int(rate)}.csv', final_data, delimiter=',')
 
-    plt.semilogy(gains, pers)
-    plt.xlabel("SDR Gain (dB)")
-    plt.ylabel("PER")
-    plt.title(f"Packet Error Rate N={num}, R={int(rate)}, S={size}")
+    # plt.semilogy(gains, pers)
+    # plt.xlabel("SDR Gain (dB)")
+    # plt.ylabel("PER")
+    # plt.title(f"Packet Error Rate N={num}, R={int(rate)}, S={size}")
 
-    plt.savefig(f'gain_vs_received_n={num}_min={min}_max={max}_r={int(rate)}.png')
+    # plt.savefig(f'gain_vs_received_n={num}_min={min}_max={max}_r={int(rate)}.png')
 
 if __name__ == "__main__":
-    vary_gain(port_t='/dev/ttyUSB0', port_r='/dev/ttyUSB1', hwid_t=0x0071, hwid_r=0x0171, num=20, min=0, max=10, size=20, rate=38.4e3)
+    vary_gain(port_t='/dev/ttyUSB0', port_r='/dev/ttyUSB1', hwid_t=0x0071, hwid_r=0x0171, num=50, min=10, max=10, size=20, rate=38.4e3)
 
     # tester = BerTester('/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_B001JRNT-if00-port0')
     # print(tester.packet_error_rate(200, gain=50))

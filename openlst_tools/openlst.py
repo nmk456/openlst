@@ -167,9 +167,7 @@ class OpenLst(LstHandler):
     def set_rf_params(
         self,
         frequency: float = 437e6,
-        chan_bw: float = 60268,
         drate: float = 7416,
-        deviation: float = 3707,
         power: int = 0x12,
     ):
         """Sets CC1110 RF parameters.
@@ -188,6 +186,9 @@ class OpenLst(LstHandler):
             Tuple of actual values of carrier frequency, channel bandwidth,
             data rate and deviation.
         """
+
+        deviation = drate / 2
+        chan_bw  = 2 * drate / 0.8
 
         # f_carrier = (f_ref / 2^16) * FREQ
         FREQ = int(2**16 * frequency / self.f_ref)
@@ -215,16 +216,6 @@ class OpenLst(LstHandler):
 
         chanbw_actual = self.f_ref / (8 * (4 + CHANBW_M) * 2**CHANBW_E)
 
-        # Data rate
-        # R_DATA = f_ref * 2^DRATE_E * (256 + DRATE_M) / 2^28
-        DRATE_E = int(np.floor(np.log2(drate * 2**20 / self.f_ref)))
-        DRATE_M = int(np.round(drate * 2**28 / (self.f_ref * 2**DRATE_E) - 256))
-
-        assert DRATE_E >= 0 and DRATE_E < 16, DRATE_E
-        assert DRATE_M >= 0 and DRATE_M < 256, DRATE_M
-
-        drate_actual = self.f_ref * 2**DRATE_E * (256 + DRATE_M) / 2**28
-
         # Deviation
         # f_dev = f_ref * 2^DEVIATN_E * (8 + DEVIATN_M) / 2^17
         DEVIATN_E = int(np.floor(np.log2(deviation * 2**14 / self.f_ref)))
@@ -234,6 +225,18 @@ class OpenLst(LstHandler):
         assert DEVIATN_M >= 0 and DEVIATN_M < 8, DEVIATN_M
 
         dev_act = self.f_ref * 2**DEVIATN_E * (8 + DEVIATN_M) / 2**17
+
+        drate = dev_act * 2
+
+        # Data rate
+        # R_DATA = f_ref * 2^DRATE_E * (256 + DRATE_M) / 2^28
+        DRATE_E = int(np.floor(np.log2(drate * 2**20 / self.f_ref)))
+        DRATE_M = int(np.round(drate * 2**28 / (self.f_ref * 2**DRATE_E) - 256))
+
+        assert DRATE_E >= 0 and DRATE_E < 16, DRATE_E
+        assert DRATE_M >= 0 and DRATE_M < 256, DRATE_M
+
+        drate_actual = self.f_ref * 2**DRATE_E * (256 + DRATE_M) / 2**28
 
         msg = bytearray()
         msg.extend(pack_cint(FREQ, 4, False))
