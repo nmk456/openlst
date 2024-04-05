@@ -36,6 +36,7 @@ volatile int8_t radio_last_rssi = -128;
 volatile uint8_t radio_last_lqi = 0;
 volatile int8_t radio_last_freqest = 0;
 volatile __xdata uint32_t radio_cs_count = 0;
+volatile __xdata uint32_t radio_sfd_count = 0;
 
 volatile __bit rf_rx_underway, rf_rx_complete;
 
@@ -263,9 +264,13 @@ void rf_isr(void)  __interrupt (RF_VECTOR) __using (1) {
 		radio_last_lqi = LQI;
 		radio_last_freqest = *((int8_t *) &FREQEST);
 	}
-	if (RFIF & RFIF_IM_SFD && !rf_mode_tx) {
-		// RX SFD - Packet reception begun (sync word detected)
-		rf_rx_underway = 1;
+	if (RFIF & RFIF_IM_SFD) {
+		radio_sfd_count++;
+
+		if (!rf_mode_tx) {
+			// RX SFD - Packet reception begun (sync word detected)
+			rf_rx_underway = 1;
+		}
 	}
 	if (RFIF & RFIF_IM_CS) {
 		radio_cs_count++;

@@ -120,6 +120,7 @@ extern volatile int8_t radio_last_rssi;
 extern volatile uint8_t radio_last_lqi;
 extern volatile int8_t radio_last_freqest;
 extern volatile __xdata uint32_t radio_cs_count;
+extern volatile __xdata uint32_t radio_sfd_count;
 
 extern __xdata uint16_t last_rx_ticks;
 extern __xdata uint32_t radio_packets_sent;

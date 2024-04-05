@@ -196,7 +196,8 @@ Struct containing:
 * `uint32_t reserved0`
 * `uint32_t reserved1`
 * `uint32_t custom0`
-* `uint32_t custom1`
+  * [7:0] - continuous RSSI measurement
+* `uint32_t custom1` - Start of frame detection count
 
 #### 0x19 - Get Callsign
 
