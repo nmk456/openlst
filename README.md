@@ -228,3 +228,11 @@ Struct containing:
   * [2:0] - DEVIATN_M
   * [6:4] - DEVIATN_E
 * `uint8_t PA_CONFIG0`
+
+#### 0x81 - Get RF Parameters
+
+TODO
+
+#### 0x82 - Set Bypass
+
+Single byte, 1 to bypass LNA+PA, 0 to not bypass LNA+PA.

@@ -74,7 +74,7 @@ typedef enum {
 
 typedef enum {
     custom_msg_rf_params = 0x80,
-    custom_msg_set_bypass = 0x81
+    custom_msg_set_bypass = 0x82
 } custom_msg_no;
 
 typedef struct {

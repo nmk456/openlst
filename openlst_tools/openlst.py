@@ -151,8 +151,6 @@ class OpenLst(LstHandler):
         telem["custom0"] = unpack_cint(data[70:74], 4, False)
         telem["custom1"] = unpack_cint(data[74:78], 4, False)
 
-        rssi_dec = telem["last_rssi"]
-
         def decode_rssi(rssi_val):
             rssi_offset = 74 # typical value for 433 MHz
 

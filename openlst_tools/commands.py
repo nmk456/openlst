@@ -16,4 +16,4 @@ class OpenLstCmds:
     GET_TELEM = 0x17
     TELEM = 0x18
     RF_PARAMS = 0x80
-    BYPASS = 0x81
+    BYPASS = 0x82
