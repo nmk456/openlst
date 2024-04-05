@@ -55,6 +55,9 @@ class BerTester:
         _, self.bw, self.drate, self.dev = self.lst_r.set_rf_params(drate=rate)
         self.lst_t.set_rf_params(drate=rate, power=gain)
 
+        # Bypass PA on TX LST
+        self.lst_t.set_bypass(True)
+
     def packet_error_rate(self, count, gain, size=255, rate=7416):
         # Returns PER
 
@@ -73,23 +76,22 @@ class BerTester:
         i = 0
 
         while i < count:
-            print("Transmitting")
             for _ in range(PACKET_STEP):
                 # If we send it to the HWID of the OpenLST, it will just drop
                 # the message instead of forwarding it. This might help reduce
                 # errors.
-                self.lst_t.transmit(b'0'*(size-10))
-                time.sleep(2*2*size*8/self.drate)
+                self.lst_t.transmit(b'0'*(size-10), self.hwid_r)
+                time.sleep(5*size*8*2/self.drate)
 
             # Wait for packet to finish transmitting
-            time.sleep(1.5)
+            time.sleep(10)
 
             try:
                 telem = self.lst_r.get_telem()
             except (AssertionError, TimeoutError):
                 telem = None
 
-            print(telem["packets_good"], telem["cs_count"], telem["rssi_dbm"])
+            print(telem["packets_good"], telem["cs_count"], telem["sfd_count"], telem["rssi_dbm"])
 
             if telem is not None and telem["uptime"] >= last_uptime:
                 i += PACKET_STEP
@@ -114,7 +116,7 @@ class BerTester:
 
 # table 72 pg 207
 powers = [-30, -20, -15, -10, -5, 0, 5, 7, 10]
-settings = [0x12, 0x0D, 0x1C, 0x34, 0x2B, 0x51, 0x85, 0xCB, 0xC2]
+settings = [0x12, 0x0E, 0x1D, 0x34, 0x2C, 0x60, 0x84, 0xC8, 0xC0]
 
 def vary_gain(port_r, port_t, hwid_r=0x00, hwid_t=0x01, num=4000, min=-30, max=10, size=255, rate=7416):
     tester = BerTester( port_r=port_r, port_t=port_t, hwid_r=hwid_r, hwid_t=hwid_t)
@@ -125,7 +127,7 @@ def vary_gain(port_r, port_t, hwid_r=0x00, hwid_t=0x01, num=4000, min=-30, max=1
     pers = np.zeros(len(gains_s), dtype=np.float32)
 
     for i in range(len(gains)):
-        per = tester.packet_error_rate(num, gains[i], size, rate=rate)
+        per = tester.packet_error_rate(num, gains_s[i], size, rate=rate)
 
         pers[i] = per
 
@@ -142,11 +144,4 @@ def vary_gain(port_r, port_t, hwid_r=0x00, hwid_t=0x01, num=4000, min=-30, max=1
     # plt.savefig(f'gain_vs_received_n={num}_min={min}_max={max}_r={int(rate)}.png')
 
 if __name__ == "__main__":
-    vary_gain(port_t='/dev/ttyUSB0', port_r='/dev/ttyUSB1', hwid_t=0x0071, hwid_r=0x0171, num=50, min=10, max=10, size=20, rate=38.4e3)
-
-    # tester = BerTester('/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_B001JRNT-if00-port0')
-    # print(tester.packet_error_rate(200, gain=50))
-
-    # time.sleep(3)
-
-    # print(tester.lst.get_telem()["packets_good"])
+    vary_gain(port_t='/dev/ttyUSB0', port_r='/dev/ttyUSB1', hwid_t=0x0071, hwid_r=0x0171, num=50, min=-20, max=-10, size=20, rate=38.4e3)
