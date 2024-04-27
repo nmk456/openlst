@@ -22,6 +22,7 @@ Set up Python environment (must have Python 3.6+ installed)
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+pip install -e .
 ```
 
 Build bootloader and application
