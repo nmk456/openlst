@@ -8,6 +8,7 @@ import time
 from typing import TypedDict
 
 from openlst_tools.commands import OpenLstCmds, MAX_DATA_LEN
+from openlst_tools.utils import unpack_cint
 
 class Packet(TypedDict):
     len: int
@@ -82,8 +83,8 @@ class LstProtocol(serial.threaded.Protocol):
         packet = Packet()
 
         packet["len"] = packet_raw[0]
-        packet["hwid"] = int.from_bytes(packet_raw[1:3], "little")
-        packet["seq"] = int.from_bytes(packet_raw[3:5], "little")
+        packet["hwid"] = unpack_cint(packet_raw[1:3], 2, False)
+        packet["seq"] = unpack_cint(packet_raw[3:5], 2, False)
         packet["system"] = packet_raw[5]
         packet["command"] = packet_raw[6]
         packet["data"] = packet_raw[7:]

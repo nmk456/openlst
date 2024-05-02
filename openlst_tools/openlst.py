@@ -278,7 +278,7 @@ if __name__ == "__main__":
         logging.basicConfig(level="INFO")
 
         hwid = binascii.unhexlify(hwid)
-        hwid = struct.unpack("<H", hwid)[0]
+        hwid = struct.unpack(">H", hwid)[0]
 
         openlst = OpenLst(port, hwid, rtscts=rtscts)
 

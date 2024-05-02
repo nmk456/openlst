@@ -86,7 +86,7 @@ def main(port, key, hwid, image):
     hwid = struct.unpack(">H", hwid)[0]
     key = unhexlify(key)
 
-    openlst = OpenLst(port, hwid=hwid)
+    openlst = OpenLst(port, rtscts=True, hwid=hwid)
 
     # Get image
     with open(image, "r") as f:
