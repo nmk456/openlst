@@ -1,9 +1,11 @@
-*.hex
-*.lk
-*.map
-*.mem
-.vagrant
+_old/**
+openlst/build/**
 *.log
 *.sig
 *.keys
 key_file
+*.hex
+venv/
+__pycache__/
+build/
+*.egg-info/

@@ -1,7 +1,9 @@
 {
     "files.associations": {
-        "radio.h": "c",
-        "input_handlers.h": "c",
-        "commands.h": "c"
-    }
+        "radio_commands.h": "c"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.formatting.provider": "none"
 }
