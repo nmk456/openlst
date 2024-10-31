@@ -13,7 +13,7 @@ Changes include:
 Install required packages
 
 ```bash
-sudo apt install build-essential pkg-config libusb-1.0-0-dev libboost-all-dev sdcc cc-tool
+sudo apt install build-essential pkg-config libusb-1.0-0-dev sdcc cc-tool
 ```
 
 Set up Python environment (must have Python 3.6+ installed)
